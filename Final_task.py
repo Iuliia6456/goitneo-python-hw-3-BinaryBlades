@@ -7,14 +7,17 @@ def input_error(func):
         try:
             return func(*args, **kwargs)
         except ValueError:
-            return "Give me the correct data"
+            print("Give me the correct data")
+
     return wrapper
+
 
 @input_error
 def parse_input(user_input):
     cmd, *args = user_input.split()
     cmd = cmd.strip().lower()
     return cmd, *args
+
 
 @input_error
 def add_contact(args, book):
@@ -25,21 +28,31 @@ def add_contact(args, book):
         record = Record(name)
         record.add_phone(phone)
         book.add_record(record)
-        return "Contact added."
+        print("Contact added")
+        cont = ''
+        for _, j in book.data.items():
+            cont += str(j) + "\n"
+        return cont
+
 
 @input_error
 def change_username_phone(args, book):
     name, new_phone = args
     pattern = re.compile(r'\d{10}$')
     if not re.match(pattern, new_phone):
-        raise ValueError (print("Phone number must have 10 digits in format 0501111111"))
+        raise ValueError(print("Phone number must have 10 digits in format 0501111111"))
     if name.lower() in book.data:
         record = book.data[name.lower()]
         record.edit_phone(record.phones[0].value, new_phone)
-        return "Contact updated."
+        print("Contact updated.")
+        cont = ''
+        for _, j in book.data.items():
+            cont += str(j) + "\n"
+        return cont
     else:
-        return "No such username"
-        
+        print("No such username")
+
+
 @input_error
 def phone_username(args, book):
     if args:
@@ -50,9 +63,10 @@ def phone_username(args, book):
         else:
             return "No such username"
     else:
-        raise ValueError (print("Wrong format, please enter the data in format: phone <name>"))
+        raise ValueError(print("Wrong format, please enter the data in format: phone <name>"))
 
-@input_error    
+
+@input_error
 def all(book):
     if book.data:
         result = ''
@@ -60,17 +74,23 @@ def all(book):
             result += str(value) + "\n"
         return result
     else:
-        raise ValueError (print("The list of contacts is empty, please enter add <name> <phone>"))
-      
+        raise ValueError(print("The list of contacts is empty, please enter add <name> <phone>"))
+
+
 @input_error
 def add_birthday(args, book):
     name, birthday = args
     if name.lower() in book.data:
         record = book.data[name.lower()]
         record.add_birthday(birthday)
-        return "Birthday added"
+        print("Birthday added")
+        cont = ''
+        for _, j in book.data.items():
+            cont += str(j) + "\n"
+        return cont
     else:
-        return "No such username"
+        print("No such username")
+
 
 @input_error
 def show_birthday(args, book):
@@ -82,8 +102,9 @@ def show_birthday(args, book):
         else:
             return "No such username"
     else:
-        raise ValueError (print("Wrong format, please enter the data in format: show-birthday <name>"))
-   
+        raise ValueError(print("Wrong format, please enter the data in format: show-birthday <name>"))
+
+
 @input_error
 def birthdays(book):
     birthdays = book.get_birthdays_per_week()
@@ -92,13 +113,14 @@ def birthdays(book):
     else:
         return "No birthdays next week"
 
+
 def main():
     book = AddressBook()
     print("Welcome to the assistant bot!")
     while True:
         user_input = input("Enter a command: ")
-        command, *args = parse_input(user_input) 
-        
+        command, *args = parse_input(user_input)
+
         if command in ["close", "exit"]:
             print("Good bye!")
             break
@@ -113,22 +135,33 @@ def main():
                 For getting the list of all contacts enter: <all>
                 For exit please enter: <close> or <exit> """)
         elif command in ["add"]:
-            print(add_contact(args, book))
+            res = add_contact(args, book)
+            if res:
+                save_to_file("users.txt", res)
         elif command in ["change"]:
-            print(change_username_phone(args, book))
+            res = change_username_phone(args, book)
+            if res:
+                save_to_file("users.txt", res)
         elif command in ["phone"]:
             print(phone_username(args, book))
         elif command in ["all"]:
             print(all(book))
         elif command in ["add-birthday"]:
-            print(add_birthday(args, book))
+            res = add_birthday(args, book)
+            if res:
+                save_to_file("users.txt", res)
         elif command in ["show-birthday"]:
             print(show_birthday(args, book))
         elif command in ["birthdays"]:
             print(birthdays(book))
         else:
             print("Invalid command. Please verify the command and try again")
-    
+
+
+def save_to_file(filename, data):
+    with open(filename, "a") as file:
+        file.write(data + "\n")
+
 
 if __name__ == "__main__":
     main()  
